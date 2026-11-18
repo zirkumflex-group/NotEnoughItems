@@ -98,7 +98,7 @@ public class FavoriteStorage {
     }
 
     /**
-     * Per-material key for GregTech tools ("itemId:damage:primary:secondary"), or null for anything else.
+     * Per-material key for GregTech tools ("itemId:damage:primaryMaterial"), or null for anything else.
      */
     public static String getToolKey(ItemStack stack) {
         if (stack == null || !stack.hasTagCompound() || !NEIServerUtils.isItemTool(stack)) {
@@ -112,12 +112,8 @@ public class FavoriteStorage {
             return null;
         }
 
-        return Item.getIdFromItem(stack.getItem()) + ":"
-                + stack.getItemDamage()
-                + ":"
-                + primary
-                + ":"
-                + stats.getString("SecondaryMaterial");
+        // primary (head) material only: the handle material may differ between the item panel and recipe outputs
+        return Item.getIdFromItem(stack.getItem()) + ":" + stack.getItemDamage() + ":" + primary;
     }
 
     private static final String GT_TOOL_STATS = "GT.ToolStats";
