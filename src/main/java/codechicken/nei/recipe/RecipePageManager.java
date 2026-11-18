@@ -46,6 +46,7 @@ public class RecipePageManager {
         this.cacheKey = cacheKey;
 
         final List<RecipeWidget> pausedWidgets = getPausedWidgets();
+        final int anchorRecipeIndex = getFirstRecipeIndexOnCurrentPage();
         this.pageWidgets.clear();
 
         final boolean allowOverflowY = this.handlerInfo.isAllowOverflowY();
@@ -110,9 +111,26 @@ public class RecipePageManager {
             this.pageWidgets.add(widgets);
         }
 
-        changePage(0);
+        // keep the recipe that was on screen visible instead of keeping the (now different) page number
+        if (anchorRecipeIndex < 0 || !gotoRecipeIndex(anchorRecipeIndex)) {
+            this.currentPageIndex = Math.min(this.currentPageIndex, getNumPages() - 1);
+            changePage(0);
+        }
 
         return true;
+    }
+
+    private int getFirstRecipeIndexOnCurrentPage() {
+
+        if (this.currentPageIndex >= 0 && this.currentPageIndex < this.pageWidgets.size()) {
+            for (Widget widget : this.pageWidgets.get(this.currentPageIndex)) {
+                if (widget instanceof RecipeWidget recipeWidget) {
+                    return recipeWidget.getRecipeHandlerRef().recipeIndex;
+                }
+            }
+        }
+
+        return -1;
     }
 
     public boolean isMultipleWidgetsAllowed() {

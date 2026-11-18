@@ -644,6 +644,7 @@ nei.recipe.page=Page %s/%s
 nei.recipe.tooltip=Recipes
 nei.recipe.fluid.tank.amount=Amount: %s
 nei.recipe.tab.view_all.tooltip=View all categories
+nei.recipe.target.not_found=NEI: the saved recipe for this item was not found, showing the first page
 nei.recipe.search.tooltip.name=Filter Syntax
 nei.recipe.search.tooltip.shift=§7Hold §6Shift§7 for more info
 nei.recipe.search.tooltip.input=%s§ftext§8 - §7search in inputs

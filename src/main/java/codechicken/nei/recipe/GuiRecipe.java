@@ -99,6 +99,11 @@ public abstract class GuiRecipe<H extends IRecipeHandler> extends GuiContainer i
     public int recipetype;
 
     private RecipeId recipeId;
+
+    // target recipe (favorite / bookmark) that is shown first on page 1 of its tab
+    private IRecipeHandler promotedHandler;
+    private int promotedRecipeIndex = -1;
+
     public GuiContainer firstGui;
     public GuiScreen firstGuiGeneral;
     public GuiScreen prevGui;
@@ -552,6 +557,11 @@ public abstract class GuiRecipe<H extends IRecipeHandler> extends GuiContainer i
         this.recipetype = (this.currenthandlers.size() + idx) % this.currenthandlers.size();
         this.handler = new SearchRecipeHandler<>(this.currenthandlers.get(this.recipetype));
         this.handlerInfo = GuiRecipeTab.getHandlerInfo(this.handler.original);
+
+        if (this.promotedHandler != null && this.promotedHandler == this.handler.original) {
+            this.handler.moveToFront(this.promotedRecipeIndex);
+        }
+
         updateContainerSize();
         this.handlerPages = new RecipePageManager(this.handler, this.handlerInfo, this.container);
         this.prevpage.enabled = this.nextpage.enabled = this.handlerPages.getNumPages() > 1;
@@ -589,6 +599,8 @@ public abstract class GuiRecipe<H extends IRecipeHandler> extends GuiContainer i
         int recipetype = 0;
 
         this.recipeId = recipeId;
+        this.promotedHandler = null;
+        this.promotedRecipeIndex = -1;
 
         if (this.recipeId != null) {
             for (int j = 0; j < this.currenthandlers.size(); j++) {
@@ -599,9 +611,22 @@ public abstract class GuiRecipe<H extends IRecipeHandler> extends GuiContainer i
                     recipetype = j;
 
                     if (!this.recipeId.getIngredients().isEmpty()) {
+                        // prefer the recipe that also produces the saved result; fall back to inputs only
                         recipeIndex = SearchRecipeHandler.findFirst(
                                 localHandler,
-                                ri -> this.recipeId.equalsIngredients(localHandler.getIngredientStacks(ri)));
+                                ri -> this.recipeId.equalsIngredients(localHandler.getIngredientStacks(ri))
+                                        && this.recipeId.equalsResult(localHandler, ri));
+
+                        if (recipeIndex < 0) {
+                            recipeIndex = SearchRecipeHandler.findFirst(
+                                    localHandler,
+                                    ri -> this.recipeId.equalsIngredients(localHandler.getIngredientStacks(ri)));
+                        }
+                    }
+
+                    if (recipeIndex >= 0) {
+                        this.promotedHandler = localHandler;
+                        this.promotedRecipeIndex = recipeIndex;
                     }
 
                     break;

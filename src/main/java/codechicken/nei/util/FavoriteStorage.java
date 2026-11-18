@@ -26,6 +26,11 @@ public class FavoriteStorage {
     protected final Map<RecipeId, Long> recipeIdToItemHash = new HashMap<>();
     protected final Map<Long, ItemStack> itemHashToItemStack = new HashMap<>();
 
+    // GT tools share one item id + damage per tool type; the material lives in NBT. Key them per material.
+    protected final Map<String, RecipeId> toolKeyToRecipeId = new HashMap<>();
+    protected final Map<RecipeId, String> recipeIdToToolKey = new HashMap<>();
+    protected final Map<String, ItemStack> toolKeyToItemStack = new HashMap<>();
+
     public void clear() {
         this.itemStackToRecipeId.clear();
         this.fluidToRecipeId.clear();
@@ -33,10 +38,13 @@ public class FavoriteStorage {
         this.itemHashToRecipeId.clear();
         this.recipeIdToItemHash.clear();
         this.itemHashToItemStack.clear();
+        this.toolKeyToRecipeId.clear();
+        this.recipeIdToToolKey.clear();
+        this.toolKeyToItemStack.clear();
     }
 
     public int size() {
-        return this.itemStackToRecipeId.size() + this.itemHashToRecipeId.size();
+        return this.itemStackToRecipeId.size() + this.itemHashToRecipeId.size() + this.toolKeyToRecipeId.size();
     }
 
     public void removeItemStack(ItemStack stack) {
@@ -54,11 +62,19 @@ public class FavoriteStorage {
         this.itemHashToRecipeId.values().removeIf(recipeId::equals);
         this.itemHashToItemStack.remove(this.recipeIdToItemHash.get(recipeId));
         this.recipeIdToItemHash.remove(recipeId);
+        this.toolKeyToRecipeId.values().removeIf(recipeId::equals);
+        this.toolKeyToItemStack.remove(this.recipeIdToToolKey.get(recipeId));
+        this.recipeIdToToolKey.remove(recipeId);
     }
 
     public void add(ItemStack stack, RecipeId recipeId) {
+        final String toolKey = getToolKey(stack);
 
-        if (!stack.hasTagCompound() || NEIServerUtils.isItemTool(stack)) {
+        if (toolKey != null) {
+            this.toolKeyToRecipeId.put(toolKey, recipeId);
+            this.recipeIdToToolKey.put(recipeId, toolKey);
+            this.toolKeyToItemStack.put(toolKey, stack);
+        } else if (!stack.hasTagCompound() || NEIServerUtils.isItemTool(stack)) {
             long key = getItemKey(stack);
             this.itemHashToRecipeId.put(key, recipeId);
             this.recipeIdToItemHash.put(recipeId, key);
@@ -81,6 +97,31 @@ public class FavoriteStorage {
         return ((long) Item.getIdFromItem(stack.getItem()) << 32) | (stack.getItemDamage() & 0xFFFFFFFFL);
     }
 
+    /**
+     * Per-material key for GregTech tools ("itemId:damage:primary:secondary"), or null for anything else.
+     */
+    public static String getToolKey(ItemStack stack) {
+        if (stack == null || !stack.hasTagCompound() || !NEIServerUtils.isItemTool(stack)) {
+            return null;
+        }
+
+        final NBTTagCompound stats = stack.getTagCompound().getCompoundTag(GT_TOOL_STATS);
+        final String primary = stats.getString("PrimaryMaterial");
+
+        if (primary.isEmpty()) {
+            return null;
+        }
+
+        return Item.getIdFromItem(stack.getItem()) + ":"
+                + stack.getItemDamage()
+                + ":"
+                + primary
+                + ":"
+                + stats.getString("SecondaryMaterial");
+    }
+
+    private static final String GT_TOOL_STATS = "GT.ToolStats";
+
     private Fluid getFluidKey(ItemStack stack) {
         final FluidStack fluid = StackInfo.getFluid(stack);
 
@@ -92,6 +133,14 @@ public class FavoriteStorage {
     }
 
     public RecipeId getRecipeId(ItemStack stack) {
+        final String toolKey = getToolKey(stack);
+
+        if (toolKey != null) {
+            // exact material match only: a steel hammer must not open the iron hammer favorite
+            final RecipeId toolRecipeId = this.toolKeyToRecipeId.get(toolKey);
+            return toolRecipeId != null ? toolRecipeId : this.itemHashToRecipeId.get(getItemKey(stack));
+        }
+
         RecipeId recipeId = this.itemHashToRecipeId.get(getItemKey(stack));
 
         if (recipeId == null) {
@@ -106,6 +155,12 @@ public class FavoriteStorage {
     }
 
     public ItemStack getItemStack(RecipeId recipeId) {
+        final String toolKey = this.recipeIdToToolKey.get(recipeId);
+
+        if (toolKey != null) {
+            return this.toolKeyToItemStack.get(toolKey);
+        }
+
         NBTTagCompound itemStackNBT = this.recipeIdToItemStack.get(recipeId);
 
         if (itemStackNBT == null) {
@@ -131,6 +186,13 @@ public class FavoriteStorage {
 
         for (Map.Entry<Long, RecipeId> entry : this.itemHashToRecipeId.entrySet()) {
             final ItemStack stack = this.itemHashToItemStack.get(entry.getKey());
+            if (stack != null) {
+                entries.add(new HashMap.SimpleEntry<>(StackInfo.itemStackToNBT(stack, false), entry.getValue()));
+            }
+        }
+
+        for (Map.Entry<String, RecipeId> entry : this.toolKeyToRecipeId.entrySet()) {
+            final ItemStack stack = this.toolKeyToItemStack.get(entry.getKey());
             if (stack != null) {
                 entries.add(new HashMap.SimpleEntry<>(StackInfo.itemStackToNBT(stack, false), entry.getValue()));
             }

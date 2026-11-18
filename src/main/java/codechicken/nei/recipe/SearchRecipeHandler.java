@@ -86,6 +86,27 @@ class SearchRecipeHandler<H extends IRecipeHandler> {
         return filtered;
     }
 
+    /**
+     * Moves the given recipe to the front of the list so it shows up first on page 1. Returns false when the recipe is
+     * not part of this (filtered) handler.
+     */
+    public boolean moveToFront(int recipeIndex) {
+        final int position = this.filteredRecipes.indexOf(recipeIndex);
+
+        if (position < 0) {
+            return false;
+        }
+
+        if (position > 0) {
+            this.filteredRecipes = new ArrayList<>(this.filteredRecipes);
+            this.filteredRecipes.remove(position);
+            this.filteredRecipes.add(0, recipeIndex);
+            this.searchRecipes = null;
+        }
+
+        return true;
+    }
+
     public void setSearchIndices(List<Integer> searchRecipes) {
         this.searchRecipes = searchRecipes;
     }

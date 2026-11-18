@@ -1,93 +1,31 @@
-# NotEnoughItems Unofficial - By the GTNH Team
+# NotEnoughItems · Zirkumflex QoL patch
 
-🌐 **Languages:** [English](README.md) | [Українська](README_uk.md)
+Internal NEI build for **GTNH 2.9** (based on `2.8.171-GTNH`). Only your client jar changes; the server keeps stock NEI.
 
-A continuation of NotEnoughItems for 1.7.10 by the developers of Gregtech: New Horizons modpack, with features either inspired and/or backported from JustEnoughItems
+## Install
 
-We've tested this against all of the mods included in GTNH, as well as a limited set of other mods (like Reika's mods). Every effort has been made to maintain backwards compatibility, however the focus is on the mods contained in the GTNH modpack.
+Copy this prompt into your AI coding agent:
 
-If you have issues with NEI outside of the GTNH modpack you may report them in the [GTNH NEI GitHub](https://github.com/GTNewHorizons/NotEnoughItems).
+```text
+Install the Zirkumflex NEI patch into my GT New Horizons 2.9 Minecraft instance. Do it step by step and stop to ask me if anything is unclear.
 
-## New Features:
-
-* Speed
-  - Uses a parallel stream to search the item list over multiple cores, resulting in 2-6x faster searches on average
-  - Loads the recipe handlers in parallel
-* A textbox for search with most of the features you'd expect - moving forward, backwards, selection, etc
-* Bookmarks! Are you in the process of crafting? Bookmark it using either 'A' or configure your own key.
-* Toggle bookmark pane.  Default shortcut key `B`.  Item Subsets menu is only available if bookmarks are not visible.
-* Utility/Cheat buttons line up and wrap based on GUI size
-* ItemList is no longer regenerated from the ItemRegistry on every inventory load
-* JEI (Or Creative) Style tabs [Optional]  Note: Requires explicit support to be added for an ItemStack to render, otherwise falls back to the first two letters of the handler name.
-* Tabs/Handlers are loaded from a CSV config in the JAR (or optionally from the config folder).  NBT IMCEvents `registerHandlerInfo` and `removeHandlerInfo` are available for mod authors to add handler information, using the same fields as the CSV file
-* `@[Mod]->[item]` searching.  ex: `@Mod.gregtech->iron ingot`
-* Cycle between Recipe, Utility, and Cheat mode by ctrl clicking on the Wrench Icon
-* GT5u Tools/Items and GT6 tools should now properly work with the Overlay Recipe Transfer
-
-### Information Page Handler
-Want to add some information about a block or item without making a massive tooltip for it? You can add information about any block or item by registering it in the Information Handler.
-
-Information page(s) are displayed when either the uses or recipes of a matching item are searched. All matching items will cycle at the top of the information page.
-
-Your mod can call:
-```java
-FMLInterModComms.sendMessage("NotEnoughItems", "addItemInfo", nbt);
-```
-Where nbt is an NBTTagCompound formatted as described below.
-
-| Tag              | Type                       | Description                                                                                                                                                                                                                |
-|------------------|----------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `filter`         | String                     | A string filter to match what items should return this information page.<br/>modname:itemname, metadata, Ore Dictionary tags, and regex can all be used. The full format may be seen in `config/NEI/collapsibleitems.cfg`. |
-| `page` / `pages` | String / String NBTTagList | The actual text to display. See below for differences between single and multi-page messages.<br/>Both formats will automatically translate provided strings.                                                              |
-
-#### Single Page Format
-
-Use the `"page"` string tag when you only want to add one page of information:
-```java
-NBTTagCompound tag = new NBTTagCompound();
-tag.setString("filter", "minecraft:log 3");
-tag.setString("page", "Exotic wood found in tropical climates.");
-
-FMLInterModComms.sendMessage("NotEnoughItems", "addItemInfo", tag);
+1. Make sure Minecraft is not running. If it is, ask me to close it first.
+2. Find my GTNH 2.9 instance (Prism Launcher, MultiMC, ATLauncher, CurseForge or the GTNH launcher). It is the folder whose `mods` folder contains `NotEnoughItems-2.8.171-GTNH.jar`. If there are several, ask me which one. If the NEI jar there has a different version, stop and tell me: this patch is only built for 2.8.171.
+3. Download the patched jar (public, no login needed) from https://github.com/zirkumflex-group/NotEnoughItems/releases/latest/download/NotEnoughItems-2.8.171-GTNH-zirkumflex.jar into a temp folder.
+4. Move (do not delete) the existing `NotEnoughItems-2.8.171-GTNH.jar` out of `mods` into a new `mods-backup` folder next to `mods`.
+5. Copy the downloaded jar into `mods`. Check that `mods` now contains exactly one NotEnoughItems jar (NotEnoughEnergistics is a different mod, leave it alone).
+6. Tell me the instance path, where the backup is, and how to undo it (swap the two jars back).
 ```
 
-#### Multiple Page Format
+[**Let me T3 Code that for you →**](https://app.t3.codes/new?prompt=Install%20the%20Zirkumflex%20NEI%20patch%20into%20my%20GT%20New%20Horizons%202.9%20Minecraft%20instance.%20Do%20it%20step%20by%20step%20and%20stop%20to%20ask%20me%20if%20anything%20is%20unclear.%0A%0A1.%20Make%20sure%20Minecraft%20is%20not%20running.%20If%20it%20is%2C%20ask%20me%20to%20close%20it%20first.%0A2.%20Find%20my%20GTNH%202.9%20instance%20%28Prism%20Launcher%2C%20MultiMC%2C%20ATLauncher%2C%20CurseForge%20or%20the%20GTNH%20launcher%29.%20It%20is%20the%20folder%20whose%20%60mods%60%20folder%20contains%20%60NotEnoughItems-2.8.171-GTNH.jar%60.%20If%20there%20are%20several%2C%20ask%20me%20which%20one.%20If%20the%20NEI%20jar%20there%20has%20a%20different%20version%2C%20stop%20and%20tell%20me%3A%20this%20patch%20is%20only%20built%20for%202.8.171.%0A3.%20Download%20the%20patched%20jar%20%28public%2C%20no%20login%20needed%29%20from%20https%3A%2F%2Fgithub.com%2Fzirkumflex-group%2FNotEnoughItems%2Freleases%2Flatest%2Fdownload%2FNotEnoughItems-2.8.171-GTNH-zirkumflex.jar%20into%20a%20temp%20folder.%0A4.%20Move%20%28do%20not%20delete%29%20the%20existing%20%60NotEnoughItems-2.8.171-GTNH.jar%60%20out%20of%20%60mods%60%20into%20a%20new%20%60mods-backup%60%20folder%20next%20to%20%60mods%60.%0A5.%20Copy%20the%20downloaded%20jar%20into%20%60mods%60.%20Check%20that%20%60mods%60%20now%20contains%20exactly%20one%20NotEnoughItems%20jar%20%28NotEnoughEnergistics%20is%20a%20different%20mod%2C%20leave%20it%20alone%29.%0A6.%20Tell%20me%20the%20instance%20path%2C%20where%20the%20backup%20is%2C%20and%20how%20to%20undo%20it%20%28swap%20the%20two%20jars%20back%29.)
 
-Use the `"pages"` tag as an `NBTTagList` of strings when you want more than one page:
-```java
-NBTTagCompound tag = new NBTTagCompound();
-tag.setString("filter", "minecraft:diamond_sword");
+## What it changes
 
-NBTTagList pages = new NBTTagList();
-pages.appendTag(new NBTTagString("A powerful melee weapon."));
-pages.appendTag(new NBTTagString("Can be enchanted for extra effects."));
+1. **Favorites first.** Your favorite (or bookmarked) recipe is shown first on page 1 instead of somewhere on page N.
+2. **Favorites that stick.** GregTech tools get a favorite per material, the recipe's output is checked too, and you get a chat note when a saved recipe can't be found.
+3. **Bookmarks follow favorites.** R on a bookmark opens your current favorite (crafting-chain bookmarks keep their own recipe).
 
-tag.setTag("pages", pages);
+Uninstall: put the original `NotEnoughItems-2.8.171-GTNH.jar` from `mods-backup` back into `mods`.
 
-FMLInterModComms.sendMessage("NotEnoughItems", "addItemInfo", tag);
-```
-* Each list entry is one page.
-* Pages will appear in NEI with buttons to scroll through them.
-
-#### Item Matching
-
-All items that match `filter` will show your information page. See `config/NEI/collapsibleitems.cfg` for the full filter format.
-
-#### Item Information Config File
-
-If you're a modpack creator and want to make custom item information pages, they can easily be added in `config/NEI/informationpages.cfg`, which has a few more examples.
-
-## Other items of note:
-
-* Remove TMI style
-* Removed inventory Load/Save state
-
-## License
-
-GTNH Modifications Copyright (c) 2019-2024 mitchej123 and the GTNH Team
-
-Licensed under LGPL-3.0 or later - use this however you want, but please give back any modifications
-
-Parts inspired/borrowed/backported from [JEI](https://github.com/mezz/JustEnoughItems/tree/1.12) under the MIT License.
-
-Originial code Copyright (c) 2014-2015 mezz and was licensed under the MIT License.
+---
+Fork of [GTNewHorizons/NotEnoughItems](https://github.com/GTNewHorizons/NotEnoughItems), LGPL-3.0. Patches live on branch `zirkumflex/qol`.

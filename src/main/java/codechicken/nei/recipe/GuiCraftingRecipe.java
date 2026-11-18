@@ -1,5 +1,6 @@
 package codechicken.nei.recipe;
 
+import java.awt.Point;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,10 +12,16 @@ import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.ChatStyle;
+import net.minecraft.util.EnumChatFormatting;
 
+import codechicken.lib.gui.GuiDraw;
+import codechicken.nei.FavoriteRecipes;
 import codechicken.nei.ItemPanels;
 import codechicken.nei.NEIClientConfig;
 import codechicken.nei.NEIClientUtils;
+import codechicken.nei.bookmark.BookmarksGridSlot;
 import codechicken.nei.recipe.Recipe.RecipeId;
 
 public class GuiCraftingRecipe extends GuiRecipe<ICraftingHandler> {
@@ -67,7 +74,14 @@ public class GuiCraftingRecipe extends GuiRecipe<ICraftingHandler> {
                 mc.displayGuiScreen(gui);
             }
 
-            gui.openTargetRecipe(recipeId, pinnedIngredients);
+            final int targetIndex = gui.openTargetRecipe(recipeId, pinnedIngredients);
+
+            if (open && targetIndex < 0 && "item".equals(outputId) && isRealRecipe(recipeId)) {
+                NEIClientUtils.printChatMessage(
+                        new ChatComponentText(NEIClientUtils.translate("recipe.target.not_found"))
+                                .setChatStyle(new ChatStyle().setColor(EnumChatFormatting.GRAY)));
+            }
+
             return gui;
         }
 
@@ -133,7 +147,25 @@ public class GuiCraftingRecipe extends GuiRecipe<ICraftingHandler> {
 
     public static RecipeId getRecipeId(GuiScreen gui, ItemStack stackover) {
         final HoveredRecipe hovered = HoveredRecipe.of(gui, stackover);
+
+        if (hovered != null && hovered.source == HoveredRecipe.Source.BOOKMARK && !hovered.favorite) {
+            // a favorite set later wins over the recipe stored in a plain bookmark (not in crafting chains)
+            final Point mouse = GuiDraw.getMousePosition();
+            final BookmarksGridSlot slot = ItemPanels.bookmarkPanel.getSlotMouseOver(mouse.x, mouse.y);
+            final RecipeId favorite = FavoriteRecipes.getFavorite(stackover);
+
+            if (slot != null && slot.getGroup().crafting == null && isRealRecipe(favorite)) {
+                return favorite;
+            }
+        }
+
         return hovered != null ? hovered.recipeId : null;
+    }
+
+    private static boolean isRealRecipe(RecipeId recipeId) {
+        return recipeId != null && recipeId.getHandlerName() != null
+                && !FavoriteRecipes.FAVORITE_ITEM.equals(recipeId.getHandlerName())
+                && !recipeId.getIngredients().isEmpty();
     }
 
     private GuiCraftingRecipe(ArrayList<ICraftingHandler> handlers) {

@@ -24,6 +24,7 @@ import codechicken.nei.NEIClientUtils;
 import codechicken.nei.NEIServerUtils;
 import codechicken.nei.PositionedStack;
 import codechicken.nei.api.ItemInfo;
+import codechicken.nei.util.FavoriteStorage;
 import codechicken.nei.util.NBTJson;
 
 public class Recipe {
@@ -168,6 +169,34 @@ public class Recipe {
             }
 
             return true;
+        }
+
+        /**
+         * Whether the given recipe produces the stored result. Item and damage must match; fluids must be the same
+         * fluid; GregTech tools must also share the material. Recipe ids saved without a result always match.
+         */
+        public boolean equalsResult(IRecipeHandler handler, int recipeIndex) {
+
+            if (this.result == null) {
+                return true;
+            }
+
+            final ItemStack other = RecipeId.of(handler, recipeIndex, Collections.emptyList()).getResult();
+
+            if (other == null) {
+                return false;
+            }
+
+            if (StackInfo.isFluidDisplayItem(this.result) || StackInfo.isFluidDisplayItem(other)) {
+                return StackInfo.equalItemAndNBT(this.result, other, true);
+            }
+
+            if (this.result.getItem() != other.getItem() || this.result.getItemDamage() != other.getItemDamage()) {
+                return false;
+            }
+
+            final String toolKey = FavoriteStorage.getToolKey(this.result);
+            return toolKey == null || toolKey.equals(FavoriteStorage.getToolKey(other));
         }
 
         private static boolean containsWithNBT(PositionedStack pStack, List<ItemStack> ingrStacks) {
